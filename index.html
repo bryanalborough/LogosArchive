@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #faf9f6;
+    --surface:   #f3f1ec;
+    --border:    rgba(0,0,0,0.10);
+    --border2:   rgba(0,0,0,0.18);
+    --text:      #1c1b18;
+    --text2:     #5a5850;
+    --text3:     #9a9890;
+    --accent:    #3d6b4f;
+    --accent-bg: #eaf2ec;
+    --serif:     'Lora', Georgia, serif;
+    --sans:      'Inter', system-ui, sans-serif;
+    --nav-w:     240px;
+  }
+
+  html { font-size: 16px; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+  /* ── Layout ── */
+  #layout { display: flex; min-height: 100vh; }
+
+  /* ── Nav ── */
+  #nav {
+    width: var(--nav-w);
+    min-width: var(--nav-w);
+    border-right: 1px solid var(--border);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+  }
+
+  #nav-header {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  #site-title {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  #site-subtitle {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  #nav-search-wrap { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  #nav-search {
+    width: 100%;
+    font-size: 13px;
+    font-family: var(--sans);
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+  }
+  #nav-search:focus { border-color: var(--accent); }
+
+  #nav-list { flex: 1; padding: 8px 0; overflow-y: auto; }
+  .nav-cat {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 20px 3px;
+  }
+  .nav-item {
+    display: block;
+    padding: 6px 20px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-left: 2px solid transparent;
+    transition: color 0.1s, background 0.1s;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--bg); font-weight: 500; }
+
+  /* ── Main ── */
+  #main { flex: 1; min-width: 0; }
+
+  #content-area {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 56px 48px 80px;
+  }
+
+  /* ── Page view ── */
+  #page-view { display: block; }
+  #page-view.hidden { display: none; }
+
+  .page-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+  .page-eyebrow span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  #page-heading {
+    font-family: var(--serif);
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  #page-body {
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.85;
+    color: var(--text);
+  }
+  #page-body h2 {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin: 2em 0 0.6em;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  #page-body p { margin-bottom: 1em; }
+  #page-body ul, #page-body ol { padding-left: 1.4em; margin-bottom: 1em; }
+  #page-body li { margin-bottom: 0.3em; }
+  #page-body blockquote {
+    border-left: 2px solid var(--border2);
+    padding: 4px 0 4px 16px;
+    color: var(--text2);
+    font-style: italic;
+    margin: 1em 0;
+  }
+  #page-body strong { font-weight: 500; }
+  #page-body a.wiki-link {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    cursor: pointer;
+  }
+  #page-body a.wiki-link:hover { color: #2a4f39; }
+
+  #page-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  #page-images img {
+    width: 160px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  #page-links {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  #page-links-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+  #page-links-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ref-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    font-size: 12px;
+    font-family: var(--sans);
+    color: var(--text2);
+    background: var(--surface);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .ref-pill:hover { background: var(--bg); color: var(--text); border-color: var(--accent); }
+  .ref-arrow { opacity: 0.5; font-size: 10px; }
+
+  /* ── Home / empty ── */
+  #home-view { display: none; }
+  #home-view.visible { display: block; }
+  #home-heading {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  #home-sub { font-size: 15px; color: var(--text2); margin-bottom: 40px; line-height: 1.6; }
+  .home-cat-block { margin-bottom: 32px; }
+  .home-cat-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+  .home-card {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    font-family: var(--sans);
+    text-decoration: none;
+    display: block;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .home-card:hover { border-color: var(--accent); color: var(--text); }
+  .home-card-title { font-weight: 500; color: var(--text); margin-bottom: 2px; font-size: 13px; }
+
+  /* ── Loading / error ── */
+  #loading { text-align: center; padding: 80px 40px; color: var(--text3); font-size: 14px; }
+  #error-msg { background: #fff3f3; border: 1px solid #fcc; border-radius: 8px; padding: 20px 24px; font-size: 14px; color: #800; line-height: 1.7; display: none; }
+  #error-msg.show { display: block; }
+
+  /* ── Mobile ── */
+  #mobile-toggle { display: none; }
+  @media (max-width: 700px) {
+    #nav { position: fixed; left: -100%; top: 0; height: 100vh; z-index: 200; transition: left 0.25s; width: 260px; }
+    #nav.open { left: 0; box-shadow: 4px 0 24px rgba(0,0,0,0.15); }
+    #mobile-toggle {
+      display: flex; align-items: center; gap: 8px;
+      position: fixed; top: 14px; left: 14px; z-index: 300;
+      background: var(--bg); border: 1px solid var(--border2);
+      padding: 7px 12px; border-radius: 8px; font-size: 13px;
+      font-family: var(--sans); color: var(--text2); cursor: pointer;
+    }
+    #content-area { padding: 24px 20px 60px; }
+    #page-heading { font-size: 26px; }
+  }
+  #nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 199; }
+  #nav-overlay.show { display: block; }
+</style>
+</head>
+<body>
+
+<button id="mobile-toggle" onclick="toggleNav()" aria-label="Open navigation">☰ Pages</button>
+<div id="nav-overlay" onclick="toggleNav()"></div>
+
+<div id="layout">
+  <nav id="nav" aria-label="Wiki navigation">
+    <div id="nav-header">
+      <div id="site-title">My World</div>
+      <div id="site-subtitle">A worldbuilding wiki</div>
+    </div>
+    <div id="nav-search-wrap">
+      <input id="nav-search" type="text" placeholder="Search…" oninput="filterNav(this.value)" aria-label="Search pages">
+    </div>
+    <div id="nav-list"></div>
+  </nav>
+
+  <main id="main">
+    <div id="content-area">
+
+      <div id="loading">Loading wiki…</div>
+      <div id="error-msg" role="alert"></div>
+
+      <div id="home-view">
+        <h1 id="home-heading">My World</h1>
+        <p id="home-sub">Browse the pages below to explore this world.</p>
+        <div id="home-cats"></div>
+      </div>
+
+      <article id="page-view" class="hidden" aria-live="polite">
+        <div class="page-eyebrow"><span id="page-cat-label"></span></div>
+        <h1 id="page-heading"></h1>
+        <div id="page-body"></div>
+        <div id="page-images"></div>
+        <div id="page-links">
+          <div id="page-links-label">Related pages</div>
+          <div id="page-links-list"></div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+</div>
+
+<script>
+const CAT_LABELS = {geo:'Geography', char:'Characters', fac:'Factions', hist:'History', misc:'Misc'};
+const CAT_ICONS  = {geo:'🗺', char:'👤', fac:'⚔️', hist:'📜', misc:'📄'};
+const CAT_ORDER  = ['char','geo','fac','hist','misc'];
+
+let db = {};
+let currentId = null;
+
+async function init() {
+  try {
+    const res = await fetch('wiki.json?v=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    db = await res.json();
+    document.getElementById('loading').style.display = 'none';
+    const title = db.__meta && db.__meta.title ? db.__meta.title : 'My World';
+    document.title = title;
+    document.getElementById('site-title').textContent = title;
+    if (db.__meta && db.__meta.subtitle) document.getElementById('site-subtitle').textContent = db.__meta.subtitle;
+    buildNav();
+    const hash = location.hash.slice(1);
+    if (hash && db[hash]) showPage(hash);
+    else showHome();
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error-msg');
+    err.innerHTML = `<strong>Couldn't load wiki.json.</strong><br>If you're viewing this locally, try opening it via a local server (see README). If it's on GitHub Pages, make sure <code>wiki.json</code> has been committed to the repo.`;
+    err.classList.add('show');
+  }
+}
+
+function pages() {
+  return Object.values(db).filter(p => p && p.id && p.title);
+}
+
+function buildNav(filter='') {
+  const list = document.getElementById('nav-list');
+  list.innerHTML = '';
+  const fl = filter.toLowerCase();
+  CAT_ORDER.forEach(cat => {
+    const ps = pages()
+      .filter(p => p.cat === cat && (!fl || p.title.toLowerCase().includes(fl) || (p.body||'').toLowerCase().includes(fl)))
+      .sort((a,b) => a.title.localeCompare(b.title));
+    if (!ps.length) return;
+    const lbl = document.createElement('div');
+    lbl.className = 'nav-cat';
+    lbl.textContent = CAT_LABELS[cat];
+    list.appendChild(lbl);
+    ps.forEach(p => {
+      const a = document.createElement('a');
+      a.className = 'nav-item' + (p.id === currentId ? ' active' : '');
+      a.textContent = p.title;
+      a.href = '#' + p.id;
+      a.onclick = e => { e.preventDefault(); showPage(p.id); closeNav(); };
+      list.appendChild(a);
+    });
+  });
+}
+
+function filterNav(v) { buildNav(v); }
+
+function showHome() {
+  currentId = null;
+  document.getElementById('page-view').classList.add('hidden');
+  const hv = document.getElementById('home-view');
+  hv.classList.add('visible');
+  buildNav();
+  const cats = document.getElementById('home-cats');
+  cats.innerHTML = '';
+  CAT_ORDER.forEach(cat => {
+    const ps = pages().filter(p => p.cat === cat).sort((a,b) => a.title.localeCompare(b.title));
+    if (!ps.length) return;
+    const block = document.createElement('div');
+    block.className = 'home-cat-block';
+    block.innerHTML = `<div class="home-cat-title">${CAT_ICONS[cat]} ${CAT_LABELS[cat]}</div><div class="home-grid"></div>`;
+    const grid = block.querySelector('.home-grid');
+    ps.forEach(p => {
+      const card = document.createElement('a');
+      card.className = 'home-card';
+      card.href = '#' + p.id;
+      card.innerHTML = `<div class="home-card-title">${esc(p.title)}</div>`;
+      card.onclick = e => { e.preventDefault(); showPage(p.id); };
+      grid.appendChild(card);
+    });
+    cats.appendChild(block);
+  });
+  history.replaceState(null, '', location.pathname);
+}
+
+function showPage(id) {
+  const p = db[id];
+  if (!p) return;
+  currentId = id;
+  document.getElementById('home-view').classList.remove('visible');
+  const pv = document.getElementById('page-view');
+  pv.classList.remove('hidden');
+
+  document.getElementById('page-cat-label').textContent = CAT_ICONS[p.cat] + ' ' + CAT_LABELS[p.cat];
+  document.getElementById('page-heading').textContent = p.title;
+  document.title = p.title + ' — ' + (db.__meta && db.__meta.title ? db.__meta.title : 'My World');
+
+  const bodyEl = document.getElementById('page-body');
+  bodyEl.innerHTML = sanitize(p.body || '');
+  bodyEl.querySelectorAll('a[data-wiki-id]').forEach(a => {
+    const tid = a.dataset.wikiId || a.getAttribute('data-wiki-id');
+    a.className = 'wiki-link';
+    a.href = '#' + tid;
+    a.removeAttribute('onclick');
+    a.onclick = e => { e.preventDefault(); showPage(tid); };
+  });
+
+  const imgs = document.getElementById('page-images');
+  imgs.innerHTML = '';
+  if (p.images && p.images.length) {
+    p.images.forEach(src => {
+      const img = document.createElement('img');
+      img.src = src; img.alt = ''; img.loading = 'lazy';
+      imgs.appendChild(img);
+    });
+    imgs.style.display = 'flex';
+  } else imgs.style.display = 'none';
+
+  const linksDiv = document.getElementById('page-links-list');
+  linksDiv.innerHTML = '';
+  const body = p.body || '';
+  const ids = [...new Set([...body.matchAll(/data-wiki-id="([^"]+)"/g)].map(m => m[1]))];
+  if (ids.length) {
+    ids.forEach(lid => {
+      const lp = db[lid];
+      if (!lp) return;
+      const pill = document.createElement('a');
+      pill.className = 'ref-pill';
+      pill.href = '#' + lid;
+      pill.innerHTML = `<span class="ref-arrow">→</span>${esc(lp.title)}`;
+      pill.onclick = e => { e.preventDefault(); showPage(lid); };
+      linksDiv.appendChild(pill);
+    });
+    document.getElementById('page-links').style.display = '';
+  } else {
+    document.getElementById('page-links').style.display = 'none';
+  }
+
+  buildNav();
+  history.pushState(null, '', '#' + id);
+  document.getElementById('content-area').scrollTop = 0;
+  window.scrollTo(0, 0);
+}
+
+function sanitize(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('script,iframe,object,embed').forEach(el => el.remove());
+  tmp.querySelectorAll('[onclick],[onerror],[onload]').forEach(el => {
+    ['onclick','onerror','onload','onmouseover'].forEach(a => el.removeAttribute(a));
+  });
+  return tmp.innerHTML;
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toggleNav() {
+  document.getElementById('nav').classList.toggle('open');
+  document.getElementById('nav-overlay').classList.toggle('show');
+}
+function closeNav() {
+  document.getElementById('nav').classList.remove('open');
+  document.getElementById('nav-overlay').classList.remove('show');
+}
+
+window.addEventListener('popstate', () => {
+  const hash = location.hash.slice(1);
+  if (hash && db[hash]) showPage(hash);
+  else showHome();
+});
+
+init();
+</script>
+</body>
+</html>

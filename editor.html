@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wiki Editor</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f4f0; --bg3: #edecea;
+    --text: #1a1a18; --text2: #555550; --text3: #999990;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --accent: #3d6b4f; --accent-light: #eaf2ec;
+    --danger: #a32d2d; --danger-bg: #fcebeb;
+    --publish: #2d5fa3; --publish-bg: #e8f0fb;
+    --radius: 8px; --radius-lg: 12px;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#1e1e1c; --bg2:#272725; --bg3:#303030;
+      --text:#e8e8e0; --text2:#a0a098; --text3:#666660;
+      --border:rgba(255,255,255,0.10); --border2:rgba(255,255,255,0.20);
+      --accent:#5faa7a; --accent-light:#1a3a28;
+      --danger:#e24b4a; --danger-bg:#501313;
+      --publish:#5B9DD6; --publish-bg:#042c53;
+    }
+  }
+  html, body { height: 100%; font-family: var(--sans); background: var(--bg2); color: var(--text); }
+  #app { display: flex; height: 100vh; }
+
+  /* Sidebar */
+  #sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
+  #sidebar-top { padding: 12px 12px 8px; border-bottom: 0.5px solid var(--border); }
+  #sidebar-top h1 { font-size: 13px; font-weight: 600; color: var(--text3); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px; }
+  #search { width: 100%; font-size: 13px; padding: 5px 9px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); outline: none; }
+  #search:focus { border-color: var(--accent); }
+  #page-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .cat-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; padding: 10px 13px 3px; }
+  .page-item { display: flex; align-items: center; gap: 7px; padding: 5px 13px; cursor: pointer; font-size: 13px; color: var(--text2); }
+  .page-item:hover { background: var(--bg3); color: var(--text); }
+  .page-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+  .page-item .pi { font-size: 12px; opacity: 0.5; flex-shrink: 0; }
+  .page-item .pn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #sidebar-footer { padding: 10px; border-top: 0.5px solid var(--border); display: flex; flex-direction: column; gap: 7px; }
+  .side-btn { width: 100%; padding: 7px; font-size: 13px; font-family: var(--sans); border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .side-btn:hover { background: var(--bg3); }
+  .side-btn.publish { background: var(--publish-bg); color: var(--publish); border-color: var(--publish); font-weight: 500; }
+  .side-btn.publish:hover { filter: brightness(0.95); }
+
+  /* Main */
+  #main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+  #toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 0.5px solid var(--border); flex-wrap: wrap; }
+  #page-title { font-size: 15px; font-weight: 600; border: none; background: transparent; color: var(--text); flex: 1; min-width: 80px; outline: none; }
+  #cat-select { font-size: 12px; padding: 3px 8px; border-radius: 20px; border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; outline: none; font-family: var(--sans); }
+  #delete-btn { margin-left: auto; padding: 5px 8px; font-size: 13px; border: none; background: transparent; color: var(--text3); cursor: pointer; border-radius: var(--radius); font-family: var(--sans); }
+  #delete-btn:hover { background: var(--danger-bg); color: var(--danger); }
+
+  #format-bar { display: flex; align-items: center; gap: 2px; padding: 4px 14px; border-bottom: 0.5px solid var(--border); background: var(--bg2); flex-wrap: wrap; }
+  .fmt { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--text2); cursor: pointer; border-radius: var(--radius); font-size: 13px; font-family: var(--sans); }
+  .fmt:hover { background: var(--bg3); color: var(--text); }
+  .fsep { width: 0.5px; height: 14px; background: var(--border2); margin: 0 3px; }
+  .fmt-lbl { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: var(--radius); color: var(--text2); font-size: 15px; }
+  .fmt-lbl:hover { background: var(--bg3); color: var(--text); }
+
+  #editor-wrap { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  #editor { flex: 1; padding: 18px 20px; outline: none; font-size: 14px; line-height: 1.8; color: var(--text); min-height: 200px; }
+  #editor:empty::before { content: attr(data-placeholder); color: var(--text3); pointer-events: none; }
+  #editor h2 { font-size: 16px; font-weight: 600; margin: 1em 0 0.3em; }
+  #editor blockquote { border-left: 2px solid var(--border2); padding-left: 12px; color: var(--text2); margin: 8px 0; }
+  #editor ul { padding-left: 20px; }
+  #editor a[data-wiki-id] { color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+  #images-strip { display: none; flex-wrap: wrap; gap: 10px; padding: 10px 20px; border-top: 0.5px solid var(--border); }
+  .iw { position: relative; }
+  .iw img { width: 84px; height: 84px; object-fit: cover; border-radius: var(--radius); border: 0.5px solid var(--border); display: block; }
+  .idel { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--danger-bg); color: var(--danger); border: 0.5px solid var(--border); cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1; }
+
+  #links-bar { padding: 6px 20px; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text3); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-height: 32px; }
+  .lpill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 20px; background: var(--bg2); border: 0.5px solid var(--border); cursor: pointer; font-size: 12px; color: var(--text2); }
+  .lpill:hover { color: var(--text); }
+  #status-bar { display: flex; gap: 14px; padding: 4px 20px; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text3); }
+  #save-st.unsaved { color: var(--accent); }
+  #save-st.saved { color: #3d6b4f; }
+
+  /* Settings panel */
+  #settings-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+  #settings-panel.open { display: flex; }
+  .panel-box { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); padding: 22px; width: 340px; }
+  .panel-box h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .field-row { margin-bottom: 12px; }
+  .field-row label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .field-row input { width: 100%; font-size: 14px; padding: 7px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); outline: none; font-family: var(--sans); }
+  .field-row input:focus { border-color: var(--accent); }
+  .panel-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .panel-actions button { padding: 6px 14px; font-size: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); cursor: pointer; font-family: var(--sans); }
+  .panel-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* New page modal */
+  #new-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+  #new-modal.open { display: flex; }
+  #new-modal .panel-box h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  #modal-name, #modal-cat { width: 100%; margin-bottom: 10px; font-size: 14px; padding: 7px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); outline: none; font-family: var(--sans); }
+  #modal-name:focus, #modal-cat:focus { border-color: var(--accent); }
+
+  /* Publish toast */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 20px; font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 999; }
+  #toast.show { opacity: 1; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-top">
+      <h1>Wiki Editor</h1>
+      <input id="search" type="text" placeholder="Search pages…" oninput="renderList(this.value)">
+    </div>
+    <div id="page-list"></div>
+    <div id="sidebar-footer">
+      <button class="side-btn" onclick="openNewModal()">＋ New page</button>
+      <button class="side-btn" onclick="openSettings()">⚙ Site settings</button>
+      <button class="side-btn publish" onclick="publishWiki()">↑ Publish wiki.json</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="toolbar">
+      <input id="page-title" type="text" placeholder="Page title" oninput="scheduleSave()">
+      <select id="cat-select" onchange="scheduleSave()">
+        <option value="misc">Misc</option>
+        <option value="geo">Geography</option>
+        <option value="char">Character</option>
+        <option value="fac">Faction</option>
+        <option value="hist">History</option>
+      </select>
+      <button id="delete-btn" onclick="deletePage()">🗑 Delete</button>
+    </div>
+    <div id="format-bar">
+      <button class="fmt" style="font-weight:700" onclick="fmt('bold')" title="Bold">B</button>
+      <button class="fmt" style="font-style:italic" onclick="fmt('italic')" title="Italic">I</button>
+      <button class="fmt" style="text-decoration:underline" onclick="fmt('underline')" title="Underline">U</button>
+      <div class="fsep"></div>
+      <button class="fmt" style="font-size:11px;font-weight:600" onclick="fmtBlock('h2')" title="Heading">H2</button>
+      <button class="fmt" onclick="fmtBlock('blockquote')" title="Blockquote">"</button>
+      <button class="fmt" onclick="fmt('insertUnorderedList')" title="List">• —</button>
+      <div class="fsep"></div>
+      <button class="fmt" onclick="insertLink()" title="Link to another page">🔗</button>
+      <div class="fsep"></div>
+      <label class="fmt-lbl" title="Attach image">🖼<input type="file" id="img-in" accept="image/*" style="display:none" onchange="handleImg(this)"></label>
+    </div>
+    <div id="editor-wrap">
+      <div id="editor" contenteditable="true" data-placeholder="Start writing…"
+        oninput="onInput()" onclick="editorClick(event)"></div>
+      <div id="images-strip"></div>
+    </div>
+    <div id="links-bar"><span>Links: </span><span id="links-out">—</span></div>
+    <div id="status-bar"><span id="wc">0 words</span><span id="save-st">—</span></div>
+  </div>
+</div>
+
+<!-- New page modal -->
+<div id="new-modal" onclick="if(event.target===this)closeNewModal()">
+  <div class="panel-box">
+    <h2>New page</h2>
+    <input id="modal-name" type="text" placeholder="Page name" onkeydown="if(event.key==='Enter')createPage()">
+    <select id="modal-cat">
+      <option value="misc">Misc</option>
+      <option value="geo">Geography</option>
+      <option value="char">Character</option>
+      <option value="fac">Faction</option>
+      <option value="hist">History</option>
+    </select>
+    <div class="panel-actions">
+      <button onclick="closeNewModal()">Cancel</button>
+      <button class="primary" onclick="createPage()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings panel -->
+<div id="settings-panel" onclick="if(event.target===this)closeSettings()">
+  <div class="panel-box">
+    <h2>Site settings</h2>
+    <div class="field-row"><label>Wiki title</label><input id="set-title" type="text" placeholder="My World"></div>
+    <div class="field-row"><label>Subtitle / tagline</label><input id="set-sub" type="text" placeholder="A worldbuilding wiki"></div>
+    <div class="panel-actions">
+      <button onclick="closeSettings()">Cancel</button>
+      <button class="primary" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'wb_editor_v1';
+const CAT_ICONS = {geo:'🗺', char:'👤', fac:'⚔️', hist:'📜', misc:'📄'};
+const CAT_LABELS = {geo:'Geography', char:'Characters', fac:'Factions', hist:'History', misc:'Misc'};
+const CAT_ORDER  = ['char','geo','fac','hist','misc'];
+
+let db = {};
+let currentId = null;
+let saveTimer = null;
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadDB() {
+  try { const r = localStorage.getItem(STORAGE_KEY); if (r) db = JSON.parse(r); } catch(e) {}
+  if (!Object.keys(db).length || (!db.__meta && !Object.values(db).find(p=>p&&p.id))) {
+    db.__meta = { title: 'My World', subtitle: 'A worldbuilding wiki' };
+    const id = uid();
+    db[id] = { id, title:'Welcome', cat:'misc', body:`<p>Welcome to your wiki editor.</p><p>Edit this page or create new ones. When you're ready, hit <strong>Publish wiki.json</strong> to download the data file, then drop it into your GitHub repo folder and push.</p>`, images:[], updated:Date.now() };
+  }
+  if (!db.__meta) db.__meta = { title:'My World', subtitle:'A worldbuilding wiki' };
+  renderList();
+  const pages = Object.values(db).filter(p=>p&&p.id).sort((a,b)=>b.updated-a.updated);
+  if (pages.length) openPage(pages[0].id);
+}
+
+function saveDB() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch(e) { alert('Storage full — try publishing and clearing some data.'); }
+}
+
+function pages() { return Object.values(db).filter(p => p && p.id && p.title); }
+
+function renderList(filter='') {
+  const list = document.getElementById('page-list');
+  list.innerHTML = '';
+  const fl = filter.toLowerCase();
+  CAT_ORDER.forEach(cat => {
+    const ps = pages()
+      .filter(p => p.cat===cat && (!fl || p.title.toLowerCase().includes(fl)))
+      .sort((a,b) => a.title.localeCompare(b.title));
+    if (!ps.length) return;
+    const lbl = document.createElement('div'); lbl.className='cat-label'; lbl.textContent=CAT_LABELS[cat];
+    list.appendChild(lbl);
+    ps.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'page-item' + (p.id===currentId?' active':'');
+      el.dataset.id = p.id;
+      el.innerHTML = `<span class="pi">${CAT_ICONS[p.cat]}</span><span class="pn">${esc(p.title)}</span>`;
+      el.onclick = () => { saveCurrent(); openPage(p.id); };
+      list.appendChild(el);
+    });
+  });
+}
+
+function openPage(id) {
+  if (!db[id]) return;
+  currentId = id;
+  const p = db[id];
+  document.getElementById('page-title').value = p.title;
+  document.getElementById('cat-select').value = p.cat;
+  document.getElementById('editor').innerHTML = p.body || '';
+  renderImgs(); renderLinks(); updateStatus();
+  renderList(document.getElementById('search').value);
+}
+
+function saveCurrent() {
+  if (!currentId || !db[currentId]) return;
+  const p = db[currentId];
+  p.title = document.getElementById('page-title').value.trim() || 'Untitled';
+  p.cat = document.getElementById('cat-select').value;
+  p.body = document.getElementById('editor').innerHTML;
+  p.updated = Date.now();
+}
+
+function scheduleSave() {
+  const s = document.getElementById('save-st'); s.textContent='Unsaved…'; s.className='unsaved';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveCurrent(); saveDB(); renderList(document.getElementById('search').value); renderLinks();
+    s.textContent='Saved'; s.className='saved';
+  }, 800);
+}
+
+function onInput() { updateStatus(); scheduleSave(); }
+
+function updateStatus() {
+  const txt = document.getElementById('editor').innerText || '';
+  const wc = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+  document.getElementById('wc').textContent = wc + ' word' + (wc===1?'':'s');
+}
+
+function renderImgs() {
+  const strip = document.getElementById('images-strip');
+  const p = db[currentId]; strip.innerHTML='';
+  const imgs = p && p.images ? p.images : [];
+  imgs.forEach((src,i) => {
+    const w = document.createElement('div'); w.className='iw';
+    w.innerHTML=`<img src="${src}" alt=""><button class="idel" title="Remove">×</button>`;
+    w.querySelector('.idel').onclick=()=>{ p.images.splice(i,1); renderImgs(); scheduleSave(); };
+    strip.appendChild(w);
+  });
+  strip.style.display = imgs.length?'flex':'none';
+}
+
+function renderLinks() {
+  const out = document.getElementById('links-out');
+  const body = document.getElementById('editor').innerHTML;
+  const ids = [...new Set([...body.matchAll(/data-wiki-id="([^"]+)"/g)].map(m=>m[1]))];
+  if (!ids.length) { out.innerHTML='—'; return; }
+  out.innerHTML = ids.map(id => {
+    const p = db[id];
+    return `<span class="lpill" data-nid="${id}" style="${p?'':'opacity:.5'}">&rarr; ${p?esc(p.title):'(deleted)'}</span>`;
+  }).join('');
+  out.querySelectorAll('.lpill[data-nid]').forEach(el => {
+    const id = el.dataset.nid;
+    if (db[id]) el.onclick=()=>{ saveCurrent(); openPage(id); };
+  });
+}
+
+function editorClick(e) {
+  const a = e.target.closest('a[data-wiki-id]');
+  if (a) { e.preventDefault(); saveCurrent(); openPage(a.getAttribute('data-wiki-id')); }
+}
+
+function fmt(cmd) { document.getElementById('editor').focus(); document.execCommand(cmd,false,null); }
+function fmtBlock(t) { document.getElementById('editor').focus(); document.execCommand('formatBlock',false,t); }
+
+function insertLink() {
+  const others = pages().filter(p=>p.id!==currentId).sort((a,b)=>a.title.localeCompare(b.title));
+  if (!others.length) { alert('No other pages yet.'); return; }
+  const chosen = prompt('Link to page:\n\n'+others.map(p=>'  '+p.title).join('\n'));
+  if (!chosen) return;
+  const target = others.find(p=>p.title.toLowerCase()===chosen.trim().toLowerCase());
+  if (!target) { alert('Page not found: '+chosen); return; }
+  document.getElementById('editor').focus();
+  document.execCommand('insertHTML',false,`<a data-wiki-id="${target.id}" href="#" onclick="return false;">${esc(target.title)}</a>`);
+}
+
+function handleImg(input) {
+  const file = input.files[0]; if (!file) return;
+  if (file.size > 3*1024*1024) { alert('Image too large (max 3MB).'); input.value=''; return; }
+  const r = new FileReader();
+  r.onload = ev => { db[currentId].images=db[currentId].images||[]; db[currentId].images.push(ev.target.result); renderImgs(); scheduleSave(); };
+  r.readAsDataURL(file); input.value='';
+}
+
+function deletePage() {
+  if (!currentId) return;
+  const p = db[currentId];
+  if (!confirm('Delete "'+p.title+'"?\nThis cannot be undone.')) return;
+  delete db[currentId]; saveDB(); currentId=null;
+  const rem = pages().sort((a,b)=>b.updated-a.updated);
+  if (rem.length) openPage(rem[0].id);
+  else { renderList(); document.getElementById('editor').innerHTML=''; document.getElementById('page-title').value=''; }
+}
+
+function openNewModal() { document.getElementById('modal-name').value=''; document.getElementById('modal-cat').value='misc'; document.getElementById('new-modal').classList.add('open'); setTimeout(()=>document.getElementById('modal-name').focus(),40); }
+function closeNewModal() { document.getElementById('new-modal').classList.remove('open'); }
+function createPage() {
+  const name=document.getElementById('modal-name').value.trim()||'Untitled';
+  const cat=document.getElementById('modal-cat').value;
+  const id=uid();
+  db[id]={id,title:name,cat,body:'',images:[],updated:Date.now()};
+  closeNewModal(); saveCurrent(); saveDB(); openPage(id);
+}
+
+function openSettings() {
+  document.getElementById('set-title').value = (db.__meta&&db.__meta.title)||'My World';
+  document.getElementById('set-sub').value = (db.__meta&&db.__meta.subtitle)||'';
+  document.getElementById('settings-panel').classList.add('open');
+  setTimeout(()=>document.getElementById('set-title').focus(),40);
+}
+function closeSettings() { document.getElementById('settings-panel').classList.remove('open'); }
+function saveSettings() {
+  db.__meta = { title: document.getElementById('set-title').value.trim()||'My World', subtitle: document.getElementById('set-sub').value.trim() };
+  saveDB(); closeSettings(); showToast('Settings saved');
+}
+
+function publishWiki() {
+  saveCurrent(); saveDB();
+  const out = {};
+  Object.entries(db).forEach(([k,v]) => { out[k] = v; });
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wiki.json';
+  a.click();
+  showToast('wiki.json downloaded — drop it in your repo folder and push to GitHub');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveCurrent(); saveDB(); const s=document.getElementById('save-st'); s.textContent='Saved'; s.className='saved'; }
+});
+
+loadDB();
+</script>
+</body>
+</html>
