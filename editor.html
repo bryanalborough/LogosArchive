@@ -186,6 +186,18 @@
     <h2>Site settings</h2>
     <div class="field-row"><label>Wiki title</label><input id="set-title" type="text" placeholder="My World"></div>
     <div class="field-row"><label>Subtitle / tagline</label><input id="set-sub" type="text" placeholder="A worldbuilding wiki"></div>
+    <div class="field-row">
+      <label>Logo / site icon</label>
+      <div id="logo-preview-wrap" style="margin-bottom:8px;display:none">
+        <img id="logo-preview" style="max-height:48px;max-width:160px;border-radius:4px;border:0.5px solid var(--border);display:block" alt="Logo preview">
+        <button onclick="clearLogo()" style="margin-top:6px;font-size:12px;color:var(--danger);background:none;border:none;cursor:pointer;padding:0;font-family:var(--sans)">Remove logo</button>
+      </div>
+      <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;color:var(--text2);background:var(--bg2);border:0.5px solid var(--border2);padding:6px 12px;border-radius:var(--radius)">
+        <span>📁</span><span id="logo-btn-label">Choose image…</span>
+        <input type="file" id="logo-input" accept="image/*" style="display:none" onchange="handleLogo(this)">
+      </label>
+      <div style="font-size:11px;color:var(--text3);margin-top:5px">Shown in the nav header on your public site. PNG or SVG recommended. Max 512KB.</div>
+    </div>
     <div class="panel-actions">
       <button onclick="closeSettings()">Cancel</button>
       <button class="primary" onclick="saveSettings()">Save</button>
@@ -364,13 +376,45 @@ function createPage() {
 function openSettings() {
   document.getElementById('set-title').value = (db.__meta&&db.__meta.title)||'My World';
   document.getElementById('set-sub').value = (db.__meta&&db.__meta.subtitle)||'';
+  const logo = db.__meta && db.__meta.logo;
+  const wrap = document.getElementById('logo-preview-wrap');
+  if (logo) {
+    document.getElementById('logo-preview').src = logo;
+    document.getElementById('logo-btn-label').textContent = 'Replace image…';
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    document.getElementById('logo-btn-label').textContent = 'Choose image…';
+  }
   document.getElementById('settings-panel').classList.add('open');
   setTimeout(()=>document.getElementById('set-title').focus(),40);
 }
 function closeSettings() { document.getElementById('settings-panel').classList.remove('open'); }
 function saveSettings() {
-  db.__meta = { title: document.getElementById('set-title').value.trim()||'My World', subtitle: document.getElementById('set-sub').value.trim() };
+  const existing = db.__meta || {};
+  db.__meta = { title: document.getElementById('set-title').value.trim()||'My World', subtitle: document.getElementById('set-sub').value.trim(), logo: existing.logo||null };
   saveDB(); closeSettings(); showToast('Settings saved');
+}
+function handleLogo(input) {
+  const file = input.files[0]; if (!file) return;
+  if (file.size > 512*1024) { alert('Image too large — please use an image under 512KB.'); input.value=''; return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    db.__meta = db.__meta || {};
+    db.__meta.logo = ev.target.result;
+    document.getElementById('logo-preview').src = ev.target.result;
+    document.getElementById('logo-preview-wrap').style.display = 'block';
+    document.getElementById('logo-btn-label').textContent = 'Replace image…';
+    saveDB();
+  };
+  r.readAsDataURL(file); input.value='';
+}
+function clearLogo() {
+  if (!confirm('Remove the logo?')) return;
+  if (db.__meta) db.__meta.logo = null;
+  document.getElementById('logo-preview-wrap').style.display = 'none';
+  document.getElementById('logo-btn-label').textContent = 'Choose image…';
+  saveDB();
 }
 
 function publishWiki() {

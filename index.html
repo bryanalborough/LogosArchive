@@ -399,6 +399,9 @@ function showHome() {
   document.getElementById('page-view').classList.add('hidden');
   const hv = document.getElementById('home-view');
   hv.classList.add('visible');
+  const meta = db.__meta || {};
+  document.getElementById('home-heading').textContent = meta.title || 'My World';
+  document.getElementById('home-sub').textContent = meta.subtitle || 'Browse the pages below to explore this world.';
   buildNav();
   const cats = document.getElementById('home-cats');
   cats.innerHTML = '';

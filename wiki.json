@@ -1,14 +1,6 @@
 {
   "__meta": {
-    "title": "The Logos Archive",
-    "subtitle": "A database of the Aeternium"
-  },
-  "mq80m8p1g4cs": {
-    "id": "mq80m8p1g4cs",
-    "title": "Welcome",
-    "cat": "misc",
-    "body": "<p>Welcome to your wiki editor.</p><p>Edit this page or create new ones. When you're ready, hit <strong>Publish wiki.json</strong> to download the data file, then drop it into your GitHub repo folder and push.</p>",
-    "images": [],
-    "updated": 1781092778697
+    "title": "My World",
+    "subtitle": "A worldbuilding wiki"
   }
 }
